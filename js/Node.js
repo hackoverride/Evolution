@@ -14,6 +14,12 @@ class Node {
     this.position.x = this.position.x + this.velocity.x;
     this.position.y = this.position.y + this.velocity.y;
   }
+  isClose(otherNode) {
+    var a = this.position.x - otherNode.position.x;
+    var b = this.position.y - otherNode.position.y;
+
+    return Math.sqrt(a * a + b * b);
+  }
 
   toString() {
     return this.name;

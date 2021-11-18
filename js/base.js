@@ -4,6 +4,7 @@ const ctx = canvas.getContext("2d");
 // the canvas should be 100% filled to window
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
+const DELTA = 20;
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 
@@ -14,9 +15,31 @@ function drawCircle(x, y, r) {
   ctx.fill();
 }
 
+function drawEdges() {
+  const maxDistance = 70;
+
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      //
+      let closeNess = nodes[i].isClose(nodes[j]);
+      if (closeNess < maxDistance) {
+        // the path drawing is a little expensive
+        let tempPercent = closeNess / maxDistance;
+        tempPercent = 1 - tempPercent;
+        ctx.beginPath();
+        ctx.lineWidth = 0.1;
+        ctx.strokeStyle = `rgba(40, 40, 60, ${tempPercent})`;
+        ctx.moveTo(nodes[i].position.x, nodes[i].position.y);
+        ctx.lineTo(nodes[j].position.x, nodes[j].position.y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
 let nodes = [];
 // Setup the nodes
-for (let i = 0; i < 500; i++) {
+for (let i = 0; i < 100; i++) {
   // position, radius, velocity, name, id
   let randomX = Math.ceil(Math.random() * WIDTH);
   let randomY = Math.ceil(Math.random() * HEIGHT);
@@ -24,33 +47,28 @@ for (let i = 0; i < 500; i++) {
     new Node(
       { x: randomX, y: randomY },
       4,
-      { x: Math.ceil(Math.random() * 2), y: Math.ceil(Math.random() * 2) },
+      { x: Math.random() * 2, y: Math.random() * 2 },
       "test",
       Math.random()
     )
   );
 }
 
-for (let node of nodes) {
-  console.log(node.toString());
-}
-
 function clearCanvas() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
 }
 
-function render() {
-  clearCanvas();
-}
-
 function animate() {
-  setTimeout(animate, 20);
-  render();
+  setTimeout(animate, DELTA);
+  clearCanvas();
   for (let node of nodes) {
     handleEdges(node);
     node.move();
     eatAnotherNode(node);
     drawCircle(node.position.x, node.position.y, node.radius);
+    if (Math.random() > 0.7) {
+      drawEdges();
+    }
   }
 }
 
@@ -91,7 +109,7 @@ function eatAnotherNode(currentNode) {
       if (score !== -1) {
         eaten = true;
       }
-      if (eaten && currentNode.radius >= node.radius && Math.random() < 0.001) {
+      if (eaten && currentNode.radius >= node.radius && Math.random() < 0.002) {
         currentNode.radius += node.radius / 2;
       } else {
         newNodeArray.push(node);
