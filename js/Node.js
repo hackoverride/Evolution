@@ -1,9 +1,10 @@
 class Node {
-  constructor(position, radius, velocity, name, id) {
+  constructor(position, radius, velocity, name, color, id) {
     this.position = position;
     this.radius = radius;
     this.velocity = velocity;
     this.name = name;
+    this.color = color;
     this.id = id;
   }
 

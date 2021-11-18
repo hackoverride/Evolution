@@ -8,8 +8,8 @@ const DELTA = 20;
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 
-function drawCircle(x, y, r) {
-  ctx.fillStyle = "#333344ff";
+function drawCircle(x, y, r, color) {
+  ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, 2 * Math.PI);
   ctx.fill();
@@ -17,7 +17,6 @@ function drawCircle(x, y, r) {
 
 function drawEdges() {
   const maxDistance = 70;
-
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
       //
@@ -28,7 +27,7 @@ function drawEdges() {
         tempPercent = 1 - tempPercent;
         ctx.beginPath();
         ctx.lineWidth = 0.1;
-        ctx.strokeStyle = `rgba(40, 40, 60, ${tempPercent})`;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${tempPercent})`;
         ctx.moveTo(nodes[i].position.x, nodes[i].position.y);
         ctx.lineTo(nodes[j].position.x, nodes[j].position.y);
         ctx.stroke();
@@ -39,16 +38,20 @@ function drawEdges() {
 
 let nodes = [];
 // Setup the nodes
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 110; i++) {
   // position, radius, velocity, name, id
   let randomX = Math.ceil(Math.random() * WIDTH);
   let randomY = Math.ceil(Math.random() * HEIGHT);
+  let red = Math.floor(Math.random() * 255);
+  let green = Math.floor(Math.random() * 255);
+  let blue = Math.floor(Math.random() * 255);
   nodes.push(
     new Node(
       { x: randomX, y: randomY },
       4,
       { x: Math.random() * 2, y: Math.random() * 2 },
       "test",
+      `rgb(${red}, ${green}, ${blue})`,
       Math.random()
     )
   );
@@ -56,6 +59,8 @@ for (let i = 0; i < 100; i++) {
 
 function clearCanvas() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = "#223";
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
 }
 
 function animate() {
@@ -65,7 +70,7 @@ function animate() {
     handleEdges(node);
     node.move();
     eatAnotherNode(node);
-    drawCircle(node.position.x, node.position.y, node.radius);
+    drawCircle(node.position.x, node.position.y, node.radius, node.color);
     if (Math.random() > 0.7) {
       drawEdges();
     }
