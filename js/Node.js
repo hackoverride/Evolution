@@ -1,9 +1,14 @@
 class Node {
-  constructor(position, radius, speed, name, color, parent1, parent2) {
+  constructor(position, radius, speed, name, color, parent1, parent2, angle) {
     this.position = position;
     this.radius = radius;
     this.speed = speed;
-    this.angle = Math.ceil(Math.random() * 360); // angle is x and y coordinate x = 1 or y = 1
+    if (typeof angle === "undefined") {
+      this.angle = Math.ceil(Math.random() * 360);
+    } else {
+      this.angle = angle;
+    }
+    // angle is x and y coordinate x = 1 or y = 1
     this.name = name;
     this.color = color;
     this.id = Math.random();
@@ -41,11 +46,20 @@ class Node {
   }
   move() {
     // Need to also add a random direction.
+    if (Math.random() > 0.99) {
+      if (Math.random() > 0.5) {
+        this.angle = this.angle + this.random;
+      } else {
+        this.angle = this.angle - this.random;
+      }
+    }
+
     let newPos = this.newPosition();
     // the movement is based on the velocity but also the direction of x and y velocity.
     this.position.x = newPos.x;
     this.position.y = newPos.y;
   }
+
   isClose(otherNode) {
     var a = this.position.x - otherNode.position.x;
     var b = this.position.y - otherNode.position.y;

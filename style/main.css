@@ -3,10 +3,10 @@ body {
   margin: 0;
   width: 100vw;
   height: 100vh;
-  background: #222;
+  background: rgb(12, 9, 14);
 }
 #scene {
-  width: 99vw;
-  height: 99vh;
+  width: 100vw;
+  height: 100vh;
   z-index: 3;
 }
