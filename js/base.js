@@ -8,6 +8,7 @@ const DELTA = 50;
 const NUMBEROFNODES = 300;
 const NUMBEROFFOOD = NUMBEROFNODES / 4;
 const MAX_DISTANCE = 30;
+const LIFE_EXPECTANCY = 100; // normal lifespan
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 
@@ -36,7 +37,7 @@ for (let i = 0; i < NUMBEROFNODES; i++) {
   nodes.push(
     new Node(
       { x: randomX, y: randomY },
-      4,
+      1,
       Math.random() * 2,
       name,
       `rgb(${red}, ${green}, ${blue})`,
@@ -105,6 +106,14 @@ function animate() {
     interactWithAnotherNode(node);
     checkFood(node);
     //drawEdges(node);
+    if (node.isPregnant) {
+      drawCircle(
+        node.position.x,
+        node.position.y,
+        1,
+        "rgba(255, 255, 255, 0.8)"
+      );
+    }
     drawCircle(node.position.x, node.position.y, node.radius, node.color);
   }
   if (Math.random() > 0.996) {
@@ -119,19 +128,35 @@ function handleEdges(node) {
   // input of node to check if the position is hitting an edge or not.
   if (node.position.x <= node.radius + 10) {
     //node.velocity.x = -node.velocity.x;
-    node.angle += 15;
+    if (node.angle > 360 - 15) {
+      node.angle = 15;
+    } else {
+      node.angle += 15;
+    }
   }
   if (node.position.y <= node.radius + 10) {
     //node.velocity.y = -node.velocity.y;
-    node.angle += 15;
+    if (node.angle > 360 - 15) {
+      node.angle = 15;
+    } else {
+      node.angle += 15;
+    }
   }
   if (node.position.x >= WIDTH - node.radius + 10) {
     //node.velocity.x = -node.velocity.x;
-    node.angle += 15;
+    if (node.angle > 360 - 15) {
+      node.angle = 15;
+    } else {
+      node.angle += 15;
+    }
   }
   if (node.position.y >= HEIGHT - node.radius + 10) {
     //node.velocity.y = -node.velocity.y;
-    node.angle += 15;
+    if (node.angle > 360 - 15) {
+      node.angle = 15;
+    } else {
+      node.angle += 15;
+    }
   }
 }
 
@@ -156,9 +181,10 @@ function interactWithAnotherNode(currentNode) {
       }
       /* Close and low change to be killed by the larger node */
       // Higher probability if the node has killed before
-      let killProbability = 0.0018;
+      let killProbability = 0.001;
+
       if (currentNode.killCount > 0) {
-        killProbability = 0.0028;
+        killProbability = 0.002;
       } else if (currentNode.killCount > 10) {
         killProbability = 0.1;
       }
@@ -167,7 +193,7 @@ function interactWithAnotherNode(currentNode) {
         currentNode.radius > node.radius &&
         Math.random() < killProbability
       ) {
-        currentNode.radius += 1;
+        //currentNode.radius += 1;
         currentNode.killCount++;
         console.log(
           currentNode.name +
@@ -181,9 +207,18 @@ function interactWithAnotherNode(currentNode) {
       }
       /* Close and low change to have a childNode */
       // Create new child
+
+      let likelyToGetPregnant = 0.002;
       if (currentNode.checkIfRelated(node)) {
-        // Relations
+        console.log(node.name + " is related to " + currentNode.name);
       } else {
+        if (
+          currentNode.isFemale &&
+          !currentNode.isPregnant &&
+          Math.random() <= likelyToGetPregnant
+        ) {
+          currentNode.impregnate(node);
+        }
         // unrelated
         //node.children++;
         //currentNode.children++;

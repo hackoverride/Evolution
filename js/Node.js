@@ -16,6 +16,12 @@ class Node {
     this.parent2 = parent2;
     this.isPregnant = false;
     this.isFemale = Math.random() > 0.5;
+    this.pregnantWithNode = null;
+  }
+
+  impregnate(node) {
+    this.isPregnant = true;
+    this.pregnantWithNode = node;
   }
 
   checkIfRelated(node) {
