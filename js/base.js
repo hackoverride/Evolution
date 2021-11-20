@@ -1,21 +1,3 @@
-const canvas = document.getElementById("scene");
-const ctx = canvas.getContext("2d");
-
-// the canvas should be 100% filled to window
-const WIDTH = window.innerWidth;
-const HEIGHT = window.innerHeight;
-const DELTA = 50;
-const NUMBER_OF_NODES = 300;
-const NUMBER_OF_FOOD = NUMBER_OF_NODES / 3;
-const MAX_DISTANCE = 150;
-const MAX_SIZE = 20;
-const MAX_SPEED = 15;
-const LIFE_EXPECTANCY = 10; // normal lifespan
-let numberOfChildren = 0;
-let numberOfKills = 0;
-canvas.width = WIDTH;
-canvas.height = HEIGHT;
-
 function drawCircle(x, y, r, color) {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -27,19 +9,30 @@ function showScoreBoard() {
   let totalNodes = 0;
   for (let n of nodes) {
     totalNodes++;
+    if (
+      n.foodEaten > oldestNode?.foodEaten ||
+      typeof oldestNode?.id === "undefined"
+    ) {
+      oldestNode = n;
+    }
   }
   ctx.font = "20px Arial";
-  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+  ctx.fillText("Children:" + numberOfChildren + " Nodes:" + totalNodes, 10, 50);
   ctx.fillText(
-    "Kills:" +
-      numberOfKills +
-      " Children:" +
-      numberOfChildren +
-      " Nodes:" +
-      totalNodes,
+    "Kills:" + numberOfKills + " Natural Deaths:" + numberOfNaturalDeaths,
     10,
-    50
+    80
   );
+
+  if (typeof oldestNode?.id !== "undefined") {
+    ctx.fillStyle = oldestNode.color;
+    ctx.fillText(
+      "Oldest node: " + oldestNode.name + " age: " + oldestNode.foodEaten,
+      10,
+      110
+    );
+  }
 }
 
 let nodes = [];
@@ -48,9 +41,9 @@ for (let i = 0; i < NUMBER_OF_NODES; i++) {
   // position, radius, velocity, name, id
   let randomX = Math.ceil(Math.random() * (WIDTH / 2) + WIDTH / 4);
   let randomY = Math.ceil(Math.random() * (HEIGHT / 2) + HEIGHT / 4);
-  let red = Math.floor(Math.random() * 255);
-  let green = Math.floor(Math.random() * 255);
-  let blue = Math.floor(Math.random() * 255);
+  let red = fetchNewRandom(50, 200);
+  let green = fetchNewRandom(50, 200);
+  let blue = fetchNewRandom(50, 200);
   let name = "";
   if (names?.length > 0) {
     let position = Math.random() * names.length;
@@ -61,12 +54,14 @@ for (let i = 0; i < NUMBER_OF_NODES; i++) {
   if (alpha < 0.4) {
     alpha = 1;
   }
+  let thisSpeed = Math.random() * MAX_SPEED + MIN_SPEED;
+
   //position, radius, speed, name, color, parent1, parent2
   nodes.push(
     new Node(
       { x: randomX, y: randomY },
       1,
-      Math.random() * 2,
+      thisSpeed,
       name,
       `rgba(${red}, ${green}, ${blue}, ${alpha})`,
       null,
@@ -101,10 +96,7 @@ function createNewNode(parent1, parent2) {
     x: Math.ceil(Math.random() * WIDTH),
     y: Math.ceil(Math.random() * HEIGHT),
   };
-  let newSize = parent1.radius;
-  if (parent2.radius > parent1.radius && Math.random() > 0.8) {
-    newSize = parent2.radius;
-  }
+  let newSize = 1;
   nodes.push(
     new Node(
       newPosition,
@@ -117,10 +109,12 @@ function createNewNode(parent1, parent2) {
       newAngle
     )
   );
+
   parent1.children++;
+  parent1.addChild(nodes[nodes.length - 1]);
   parent2.children++;
+  parent2.addChild(nodes[nodes.length - 1]);
   numberOfChildren++;
-  console.log(name + " was born");
 }
 
 let foods = [];
@@ -144,70 +138,45 @@ function fillFood() {
   }
 }
 
-function animate() {
-  setTimeout(animate, DELTA);
-  clearCanvas();
-  for (let node of nodes) {
-    handleEdges(node);
-    node.move();
-    interactWithAnotherNode(node);
-    checkFood(node);
-    drawCircle(node.position.x, node.position.y, node.radius, node.color);
-    if (node.isPregnant) {
-      drawCircle(node.position.x, node.position.y, 1, "rgba(255, 255, 255, 1)");
-      if (Math.random() < 0.003) {
-        createNewNode(node, node.pregnantWithNode);
-        node.isPregnant = false;
-        node.pregnantWithNode = null;
-      }
-    }
-  }
-  if (Math.random() > 0.998) {
-    fillFood();
-  }
-  for (let food of foods) {
-    drawCircle(food.position.x, food.position.y, 2, "#F00");
-  }
-}
-
 function handleEdges(node) {
+  let angleChanged = 3;
   // input of node to check if the position is hitting an edge or not.
   if (node.position.x <= node.radius) {
     //node.velocity.x = -node.velocity.x;
-    if (node.angle > 360 - 15) {
-      node.angle = 5;
+    if (node.angle > 360 - angleChanged) {
+      node.angle = angleChanged;
     } else {
-      node.angle += 5;
+      node.angle += angleChanged;
     }
   }
   if (node.position.y <= node.radius) {
     //node.velocity.y = -node.velocity.y;
-    if (node.angle > 360 - 15) {
-      node.angle = 5;
+    if (node.angle > 360 - angleChanged) {
+      node.angle = angleChanged;
     } else {
-      node.angle += 5;
+      node.angle += angleChanged;
     }
   }
   if (node.position.x >= WIDTH - node.radius) {
     //node.velocity.x = -node.velocity.x;
-    if (node.angle > 360 - 15) {
-      node.angle = 5;
+    if (node.angle > 360 - angleChanged) {
+      node.angle = angleChanged;
     } else {
-      node.angle += 5;
+      node.angle += angleChanged;
     }
   }
   if (node.position.y >= HEIGHT - node.radius) {
     //node.velocity.y = -node.velocity.y;
-    if (node.angle > 360 - 15) {
-      node.angle = 5;
+    if (node.angle > 360 - angleChanged) {
+      node.angle = angleChanged;
     } else {
-      node.angle += 5;
+      node.angle += angleChanged;
     }
   }
-  if (node.position.x < -100 || node.position.x > WIDTH + 100) {
+  if (node.position.x < -1 || node.position.x > WIDTH + 1) {
     node.position.x = WIDTH / 2;
   }
-  if (node.position.y < -100 || node.position.y > HEIGHT + 100) {
+  if (node.position.y < -1 || node.position.y > HEIGHT + 1) {
     node.position.y = HEIGHT / 2;
   }
 }
@@ -237,6 +206,10 @@ function interactWithAnotherNode(currentNode) {
       if (distance < MAX_DISTANCE && node.isPregnant) {
         drawEdges(currentNode, node, 255, 255, 255, false);
       }
+
+      if (oldestNode?.id === currentNode?.id) {
+        drawEdges(currentNode, node, 0, 255, 0, false);
+      }
       /* Close and low change to be killed by the larger node */
       // Higher probability if the node has killed before
       let related = currentNode.checkIfRelated(node);
@@ -259,6 +232,7 @@ function interactWithAnotherNode(currentNode) {
       }
       if (close && Math.random() < killProbability && !related) {
         currentNode.killCount++;
+        currentNode.cash += node.cash;
         numberOfKills++;
         console.log(
           currentNode.name +
@@ -298,15 +272,38 @@ function interactWithAnotherNode(currentNode) {
         newNodeArray.push(node);
       }
     } else {
-      let probabilityOfDeath = 0.000001;
+      let probabilityOfDeath = MORTALITY;
+      if (nodes?.length > NODE_CEIL) {
+        /* more likely to die of the max number of nodes is reached */
+        probabilityOfDeath += 0.001;
+      }
+      // If the currentNode has a job with increased risk
+      probabilityOfDeath += currentNode?.job?.increasedRisk ?? 0;
       if (currentNode.foodEaten > LIFE_EXPECTANCY) {
-        probabilityOfDeath += 0.01;
+        probabilityOfDeath += 0.001;
       }
       if (currentNode.children > 3) {
+        // More likely to die if the node has more children.
         probabilityOfDeath += 0.0001;
       }
       if (Math.random() < probabilityOfDeath) {
-        console.log(node.name + " died");
+        console.log(node.name + " died, age: " + node.foodEaten);
+        if (oldestNode?.id === node.id) {
+          oldestNode = null;
+        }
+        if (node.children > 0) {
+          node.handleEstate(nodes);
+          console.log(
+            node.children + " Children inherited: " + this.cash / TAXES
+          );
+        } else {
+          console.log("-- No children, cash:" + node.cash);
+        }
+        if (typeof node?.job?.title !== "undefined") {
+          console.log("as a " + node.job.title);
+        }
+
+        numberOfNaturalDeaths++;
       } else {
         newNodeArray.push(node);
       }
@@ -327,11 +324,15 @@ function checkFood(currentNode) {
       f.value
     );
     if (score !== -1) {
+      currentNode.foodEaten++;
+      if (currentNode.foodEaten === 1) {
+        currentNode.getJob();
+      }
+      currentNode.work();
       let newRadius = currentNode.radius;
       newRadius += 1;
-      if (currentNode.radius + newRadius <= MAX_SIZE) {
+      if (currentNode.radius + newRadius < MAX_SIZE && Math.random() < 0.9) {
         currentNode.radius = newRadius;
-        currentNode.foodEaten++;
       }
     } else {
       newFoodArray.push(f);
@@ -340,14 +341,37 @@ function checkFood(currentNode) {
   foods = newFoodArray;
 }
 
-animate();
+/* Animation */
+requestAnimationFrame(animate);
 
-function areTheyTouching(x1, x2, y1, y2, r1, r2) {
-  let distSq = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
-  let radSumSq = (r1 + r2) * (r1 + r2);
-  if (distSq == radSumSq) return 1;
-  else if (distSq > radSumSq) return -1;
-  else return 0;
+function animate() {
+  clearCanvas();
+  life();
+  requestAnimationFrame(animate);
+}
+
+function life() {
+  for (let node of nodes) {
+    handleEdges(node);
+    node.move();
+    interactWithAnotherNode(node);
+    checkFood(node);
+    drawCircle(node.position.x, node.position.y, node.radius, node.color);
+    if (node.isPregnant) {
+      drawCircle(node.position.x, node.position.y, 1, "rgba(255, 255, 255, 1)");
+      if (Math.random() < 0.002) {
+        createNewNode(node, node.pregnantWithNode);
+        node.isPregnant = false;
+        node.pregnantWithNode = null;
+      }
+    }
+  }
+  if (Math.random() > 0.998) {
+    fillFood();
+  }
+  for (let food of foods) {
+    drawCircle(food.position.x, food.position.y, 4, foodColor);
+  }
 }
 
 function drawEdges(currentNode, node, r, g, b, overrideAlpha) {

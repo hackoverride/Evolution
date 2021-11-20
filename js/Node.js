@@ -16,17 +16,81 @@ class Node {
     this.foodEaten = 0;
     this.killCount = 0;
     this.children = 0;
-    this.random = Math.random();
+    this.random = fetchNewRandom(1, 3);
     this.parent1 = parent1;
     this.parent2 = parent2;
+    this.childNodes = [];
     this.isPregnant = false;
     this.isFemale = Math.random() > 0.5;
     this.pregnantWithNode = null;
+    this.cash = 0;
+  }
+
+  addChild(node) {
+    let newChildArray = [];
+    for (let i = 0; i < this.childNodes.length; i++) {
+      //
+      newChildArray.push(this.childNodes[i]);
+    }
+    newChildArray.push(node);
+    this.childNodes = newChildArray;
+  }
+
+  handleEstate(allNodes) {
+    // pass out remaining cash to children.
+    let numberOfChildrenAlive = [];
+
+    for (let n of allNodes) {
+      for (let c of this.childNodes) {
+        if (c.id === n.id) {
+          numberOfChildrenAlive.push(c);
+        }
+      }
+    }
+    let splitNumber = numberOfChildrenAlive?.length || 1;
+    let sum = this.cash / splitNumber; // Taxes comes several times!'
+    for (let c of numberOfChildrenAlive) {
+      c.inherit(sum, this.id);
+    }
+  }
+
+  inherit(cash, id) {
+    if (this.parent1?.id === id) {
+      this.parent1 = null;
+    } else if (this.parent2?.id === id) {
+      this.parent2 = null;
+    }
+    console.log(this.name + " inherited " + Math.floor(cash / TAXES));
+    this.cash += Math.floor(cash / TAXES);
   }
 
   impregnate(node) {
     this.isPregnant = true;
     this.pregnantWithNode = node;
+  }
+
+  getJob() {
+    let position = fetchNewRandom(0, professions.length);
+    this.job = professions[position];
+  }
+
+  work() {
+    if (typeof this?.job?.title !== "undefined") {
+      let totalCash = this.cash;
+      totalCash += this.job.pay / TAXES;
+      totalCash -= LIFE_COST;
+      if (Math.random() < 0.2) {
+        // Sometimes you just have a bad day
+        totalCash -= totalCash / 3;
+      }
+      if (totalCash > AVERAGE_HOUSE_PRICES) {
+        if (typeof this?.ownsAHome === "undefined") {
+          this.ownsAHome = true;
+        }
+        totalCash -= AVERAGE_HOUSE_PRICES;
+      }
+      this.cash += this.job.pay / TAXES;
+    }
   }
 
   checkIfRelated(node) {
@@ -48,9 +112,9 @@ class Node {
     // Need to also add a random direction.
     if (Math.random() > 0.99) {
       if (Math.random() > 0.5) {
-        this.angle = this.angle + this.random;
+        this.angle -= this.random / 10;
       } else {
-        this.angle = this.angle - this.random;
+        this.angle += this.random / 10;
       }
     }
 
