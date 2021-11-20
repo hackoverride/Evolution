@@ -6,24 +6,29 @@ const ctx = canvas.getContext("2d");
 // the canvas should be 100% filled to window
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
-const NUMBER_OF_NODES = 300;
-const NODE_CEIL = 300; // if nodes.length > NODE_CEIL then mortality rates go up.
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
+
+const NUMBER_OF_NODES = 200;
+const NODE_CEIL = 400; // if nodes.length > NODE_CEIL then mortality rates go up.
 const NUMBER_OF_FOOD = NUMBER_OF_NODES / 3;
-const MAX_DISTANCE = 150;
-const MAX_SIZE = 20;
+const MAX_DISTANCE = 70; // distance the edge rendering activates
+const MAX_SIZE = 30;
 const MIN_SPEED = 0.02;
 const MAX_SPEED = 0.55;
-const LIFE_EXPECTANCY = 30; // normal lifespan
+const LIFE_EXPECTANCY = 90; // normal lifespan
 const MORTALITY = 0.000001;
-const TAXES = 0.03;
-const LIFE_COST = 8;
-let AVERAGE_HOUSE_PRICES = 100000;
+const TAXES = 0.3;
+const LIFE_COST = 4;
+
+let AVERAGE_HOUSE_PRICES = 10000;
 let numberOfChildren = 0;
 let numberOfKills = 0;
 let numberOfNaturalDeaths = 0;
-canvas.width = WIDTH;
-canvas.height = HEIGHT;
+
 let oldestNode = null;
+let mostChildren = null;
+let richest = null;
 
 const fetchNewRandom = (min, max) => {
   return Math.round(Math.random() * (max - min + 1)) + min;

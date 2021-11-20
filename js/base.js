@@ -15,6 +15,15 @@ function showScoreBoard() {
     ) {
       oldestNode = n;
     }
+    if (n?.cash > richest?.cash || typeof richest?.id === "undefined") {
+      richest = n;
+    }
+    if (
+      n?.children > mostChildren?.children ||
+      typeof mostChildren?.id === "undefined"
+    ) {
+      mostChildren = n;
+    }
   }
   ctx.font = "20px Arial";
   ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
@@ -31,6 +40,27 @@ function showScoreBoard() {
       "Oldest node: " + oldestNode.name + " age: " + oldestNode.foodEaten,
       10,
       110
+    );
+  }
+
+  if (typeof richest?.id !== "undefined") {
+    ctx.fillStyle = richest.color;
+    ctx.fillText(
+      "Richest node: " + richest.name + " cash: " + Math.ceil(richest.cash),
+      10,
+      140
+    );
+  }
+
+  if (typeof mostChildren?.id !== "undefined") {
+    ctx.fillStyle = mostChildren.color;
+    ctx.fillText(
+      "Node with most children: " +
+        mostChildren.name +
+        " : " +
+        mostChildren.children,
+      10,
+      170
     );
   }
 }
@@ -246,23 +276,22 @@ function interactWithAnotherNode(currentNode) {
       /* Close and low change to have a childNode */
       // Create new child
 
-      let likelyToGetPregnant = 0.003;
+      let likelyToGetPregnant = 0.0025;
 
       if (currentNode.children > 1) {
-        likelyToGetPregnant = 0.005;
+        likelyToGetPregnant += 0.0025;
       }
 
       if (
         close &&
+        currentNode.foodEaten > 1 &&
         currentNode.isFemale &&
         !node.isFemale &&
         !currentNode.isPregnant &&
         Math.random() < likelyToGetPregnant &&
         !related
       ) {
-        if (!currentNode.checkIfRelated(node) && currentNode.foodEaten > 1) {
-          currentNode.impregnate(node);
-        }
+        currentNode.impregnate(node);
       }
       // unrelated
       //node.children++;
@@ -280,7 +309,7 @@ function interactWithAnotherNode(currentNode) {
       // If the currentNode has a job with increased risk
       probabilityOfDeath += currentNode?.job?.increasedRisk ?? 0;
       if (currentNode.foodEaten > LIFE_EXPECTANCY) {
-        probabilityOfDeath += 0.001;
+        probabilityOfDeath += 0.0003;
       }
       if (currentNode.children > 3) {
         // More likely to die if the node has more children.
@@ -291,16 +320,18 @@ function interactWithAnotherNode(currentNode) {
         if (oldestNode?.id === node.id) {
           oldestNode = null;
         }
+        if (mostChildren?.id === node.id) {
+          mostChildren = null;
+        }
+        if (richest?.id === node.id) {
+          richest = null;
+        }
         if (node.children > 0) {
           node.handleEstate(nodes);
-          console.log(
-            node.children + " Children inherited: " + this.cash / TAXES
-          );
-        } else {
-          console.log("-- No children, cash:" + node.cash);
         }
         if (typeof node?.job?.title !== "undefined") {
-          console.log("as a " + node.job.title);
+          console.log("as " + node.job.title);
+          // Cash goes to "the government"
         }
 
         numberOfNaturalDeaths++;
@@ -323,6 +354,7 @@ function checkFood(currentNode) {
       currentNode.radius,
       f.value
     );
+
     if (score !== -1) {
       currentNode.foodEaten++;
       if (currentNode.foodEaten === 1) {
@@ -353,7 +385,7 @@ function animate() {
 function life() {
   for (let node of nodes) {
     handleEdges(node);
-    node.move();
+    node.move(foods); // if brain has higher foodSensor then the node should aim towards the closest food.
     interactWithAnotherNode(node);
     checkFood(node);
     drawCircle(node.position.x, node.position.y, node.radius, node.color);

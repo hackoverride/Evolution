@@ -1,5 +1,15 @@
 class Node {
-  constructor(position, radius, speed, name, color, parent1, parent2, angle) {
+  constructor(
+    position,
+    radius,
+    speed,
+    name,
+    color,
+    parent1,
+    parent2,
+    angle,
+    brain
+  ) {
     this.position = position;
     this.radius = radius;
     this.speed = speed;
@@ -7,6 +17,12 @@ class Node {
       this.angle = Math.ceil(Math.random() * 360);
     } else {
       this.angle = angle;
+    }
+    // If we get an input of brain then we handle the inheritance.
+    if (typeof brain === "object") {
+      this.brain = new Brain(brain);
+    } else {
+      this.brain = new Brain();
     }
     // angle is x and y coordinate x = 1 or y = 1
     this.name = name;
@@ -108,15 +124,42 @@ class Node {
   compare(otherNode) {
     return this.id === otherNode.id;
   }
-  move() {
+  move(foods) {
     // Need to also add a random direction.
-    if (Math.random() > 0.99) {
-      if (Math.random() > 0.5) {
-        this.angle -= this.random / 10;
-      } else {
-        this.angle += this.random / 10;
+    let closestFood = null;
+    let distance = 10000;
+    if (this.brain.foodSensor > 70) {
+      // should target closest food.
+      for (let f of foods) {
+        if (this.brain.findClosest(this.position, f.position) < distance) {
+          closestFood = f;
+        }
       }
     }
+    this.closestFood = closestFood ?? null;
+    if (typeof this.closestFood?.position?.y !== "undefined") {
+      let newAngle = this.brain.angle360(
+        this.position.x,
+        this.position.y,
+        closestFood?.position?.x,
+        closestFood?.position?.y
+      );
+      this.angle = newAngle;
+    } else {
+      if (Math.random() > 0.99) {
+        if (Math.random() > 0.5) {
+          this.angle -= this.random / 10;
+        } else {
+          this.angle += this.random / 10;
+        }
+      }
+    }
+
+    // adjust angle if closestFood position is found.
+
+    /*
+    
+    */
 
     let newPos = this.newPosition();
     // the movement is based on the velocity but also the direction of x and y velocity.
